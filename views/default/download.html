@@ -1,0 +1,14 @@
+{{extend 'layout.html'}}
+
+<div style="margin-left: auto; margin-right: auto; width: 60%;">
+    <h2>Uploads verwalten</h2>
+    {{for upload in uploads:}}
+        <table>
+            <tr><td>{{=upload.LastName}}</td><td>{{=upload.FirstName}}</td><td>{{=upload.File}}</td></tr>
+        </table>
+    {{pass}}
+    <div>
+        {{=download_button}}
+    </div>
+</div>
+

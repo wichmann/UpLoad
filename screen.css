@@ -1,0 +1,54 @@
+@charset "UTF-8";
+/**
+* UpLoad Stylesheet
+*
+* Common styles for screens
+*
+* @copyright       Copyright 2009, Christian Wichmann
+* @license         CC-A 3.0 (http://creativecommons.org/licenses/by-nc/3.0/de/),
+* @version         0.01
+*/
+
+/* --- main elements ---------------------------------------------------------*/
+html {
+	/*height: 100%;
+	width: 100%;	*/
+}
+
+body {
+	width:750px;
+	margin:auto;
+	/*font-family: Georgia, Baskerville, "Times New Roman", Times, Garamond, serif;*/
+	font-family: Helvetica, Arial, sans-serif;
+	font-size: 11pt; /* equals 100%*/
+	background-color:#D8D8D8;
+	color: black;
+}
+
+h1 {
+	font-size: 130%;
+	font-family: Helvetica, Arial, sans-serif;
+	font-weight: 100;
+	letter-spacing: 0.25em;
+	text-shadow: #AAA 2px 2px 2px;
+	border-bottom: 1px solid black;
+	padding: 0 0 0.25em 0;
+}
+
+#UploadForm {
+	font-family: Helvetica, Arial, sans-serif;
+}
+
+#schoollogo {
+	display:block;
+	margin-left:auto;
+	margin-right:auto;
+	padding:2em;
+}
+
+#pythonlogo {
+	float:right; 
+	margin-left: 20px; 
+	margin-bottom: 0px;
+}
+
