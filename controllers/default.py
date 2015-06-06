@@ -15,14 +15,34 @@ def index():
     button = A(T('Upload file'), _href=URL('default', 'upload'), _class='btn btn-primary')
     return locals()
 
-
+#
+# Cascading combobox:
+# www.web2pyslices.com/slice/show/1724/cascading-dropdowns-simplified
+# dev.s-cubism.com/plugin_lazy_options_widget
+# http://www.web2pyslices.com/slice/show/1467/cascading-drop-down-lists-with-ajax
+#
 def upload():
     # TODO Storing the original filename (see: http://web2py.com/books/default/chapter/29/07/forms-and-validators#Storing-the-original-filename)
     form = SQLFORM(db.upload)
+    teacher_combo = form.element(_name='Teacher')
+    script = SCRIPT("""
+                    function onchange_teacher() {{
+                        // drop all options in combobox and fill with jquery command from ajax call
+                        $("#upload_Task").empty();
+                        ajax('{task_url}', ['Teacher'], ':eval');
+                    }};
+                    """.format(task_url=URL('default', 'taskoptions')))
+    #$(function() {
+    #  $('select[name="City"]').change(function() {
+    #     ajax('function_name', ['City'], 'target_div');
+    #  });
+    #});
+    teacher_combo['_onchange'] = XML('onchange_teacher();')
     # check if token is correct
     # check if now is between start date and due date
     # check if task and teacher correspond correctly
     # if form correct perform the insert
+    tasks = SQLTABLE(db(db.task.id > 0)(db.task.Teacher == request.vars.Teacher).select())
     if form.process().accepted:
         response.flash = T('File successfully uploaded!')
         if DO_MAIL:
@@ -31,10 +51,21 @@ def upload():
     return locals()
 
 
+def taskoptions():
+    session.forget(response)
+    tasks = db(db.task.Teacher == request.vars.Teacher).select(db.task.Name, db.task.id)
+    options = '<option value=""></option>'
+    # TODO Change this to use either the OPTION class from web2py or transmit the task data to js. Then the data could
+    # TODO be evaluated at the user. This would prevent the page 'taskoptions' to return an otherwise unusable string!
+    #options += [OPTION(t.Name, _value=str(t.id)) for t in tasks]
+    options += ''.join(['<option value="{id}">{text}</option>'.format(text=t.Name, id=t.id) for t in tasks])
+    return "$('#upload_Task').append('%s')" % options
+
+
 @auth.requires_login()
 def collect():
     # include java script to submit form when combo box is changed
-    # TODO change default value of combobox to represent last clicked
+    # TODO Write default text like 'Choose a teacher' to combobox
     script = SCRIPT("""
                     $('document').ready(function(){
                         $('select').change(function(){
@@ -46,7 +77,7 @@ def collect():
     tasks = db(db.task.Teacher == auth.user).select()
     task_combo = SELECT(_name='taskselect', value= request.vars.taskselect if request.vars.taskselect else '',
                         *[OPTION(tasks[i].Name, _value=str(tasks[i].id)) for i in range(len(tasks))])
-    task_chooser = FORM(TR(T('Choose a task:'), task_combo))#,TR(INPUT(_name='Select task...', _type='submit')))
+    task_chooser = FORM(TR(T('Choose a task:'), task_combo))
     # show chosen task with all its uploads
     if request.vars.taskselect:
         # if form was send with a chosen task show this task...
@@ -62,12 +93,6 @@ def collect():
 @auth.requires_login()
 def download_task():
     pass
-
-
-def taskoptions():
-    session.forget(response)
-    tasks = db(db.task.Teacher == request.vars.Teacher).select(db.task.Name)
-    return dict(tasks=tasks)
 
 
 @auth.requires_login()
