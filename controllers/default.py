@@ -32,19 +32,19 @@ def upload():
                         ajax('{task_url}', ['Teacher'], ':eval');
                     }};
                     """.format(task_url=URL('default', 'taskoptions')))
-    #$(function() {
-    #  $('select[name="City"]').change(function() {
-    #     ajax('function_name', ['City'], 'target_div');
-    #  });
-    #});
     teacher_combo['_onchange'] = XML('onchange_teacher();')
-    # check if token is correct
-    # check if now is between start date and due date
-    # check if task and teacher correspond correctly
+    # TODO check if token is correct
+    # TODO check if now is between start date and due date
+    # TODO check if OpenForSubmission is True
+    # TODO check if task and teacher correspond correctly
     # if form correct perform the insert
     tasks = SQLTABLE(db(db.task.id > 0)(db.task.Teacher == request.vars.Teacher).select())
     if form.process().accepted:
         response.flash = T('File successfully uploaded!')
+        # store original file name in database
+        if form.vars.id:
+            new_upload_entry = db(db.upload.id == form.vars.id).select().first()
+            new_upload_entry.update_record(UploadedFileName=request.vars.UploadedFile.filename)
         if DO_MAIL:
             mail.send(request.vars.EMail, 'File successfully uploaded',
                       'Your file with the hash (MD5) xxx has been successfully uploaded.')
@@ -82,17 +82,27 @@ def collect():
     if request.vars.taskselect:
         # if form was send with a chosen task show this task...
         uploads = db(db.upload.Task == request.vars.taskselect).select()
+        download_button = A(T('Download all uploaded files...'), _href=URL(f='download_task', args=[request.vars.taskselect]), _class='btn btn-primary')
     else:
         # ...else show the first task of current user if there is one
         if tasks:
             uploads = db(db.upload.Task == tasks[0].id).select()
-    download_button = A(T('Download all uploaded files...'), _href=URL('default', 'download_task'), _class='btn btn-primary')
+            download_button = A(T('Download all uploaded files...'), _href=URL(f='download_task', args=[tasks[0].id]), _class='btn btn-primary')
     return locals()
 
 
 @auth.requires_login()
 def download_task():
-    pass
+    if request.args:
+        task_to_download = request.args[0]
+        #file_list = [x.values() for x in db(db.upload.Task == task_to_download).select(db.upload.UploadedFile)]
+        #response.download(request, db)
+        import os
+        file_on_disk = os.path.join(request.folder, 'uploads', db.upload[task_to_download].UploadedFile)
+        file = open(file_on_disk, 'r')
+        import hashlib
+        hash = hashlib.sha256(open(file_on_disk, 'rb').read()).digest()
+    return locals()
 
 
 @auth.requires_login()

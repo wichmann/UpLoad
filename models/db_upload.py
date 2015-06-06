@@ -49,6 +49,7 @@ db.define_table(
     Field('Task', db.task, required=True, label=T('Task')),
     Field('Token', 'string', label=T('Token')),
     Field('UploadedFile', 'upload', label=T('File to be uploaded')),
+    Field('UploadedFileName', writable=False, readable=False),
     auth.signature,
 )
 
