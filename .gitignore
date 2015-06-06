@@ -55,4 +55,5 @@ target/
 
 ##### Project specific
 *.log.*
+.idea/*
 

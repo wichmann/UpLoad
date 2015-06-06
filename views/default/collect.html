@@ -1,0 +1,23 @@
+{{extend 'layout.html'}}
+
+<div style="margin-left: auto; margin-right: auto; width: 60%;">
+    <h2>Uploads verwalten</h2>
+
+    <div>
+        {{=task_chooser}}
+    </div>
+
+    {{if 'uploads' in globals():}}
+        <table>
+            <tr><td>Last Name</td><td>First Name</td><td>Attending Class</td></tr>
+        {{for upload in uploads:}}
+            <tr><td>{{=upload.LastName}}</td><td>{{=upload.FirstName}}</td><td>{{=upload.AttendingClass}}</td></tr>
+        {{pass}}
+        </table>
+    {{pass}}
+
+    {{if 'download_button' in globals():}}
+        <div> {{=download_button}} </div>
+    {{pass}}
+</div>
+

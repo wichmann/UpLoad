@@ -1,35 +1,52 @@
-# T.set_current_languages('de', 'de-de')
+
+from gluon.tools import Mail
+
+mail = Mail()
+mail.settings.server = ''
+mail.settings.sender = ''
+mail.settings.login = ''
 
 def index():
     message = ('UpLoad@BBS dient dem einfachen Abgeben von Projektarbeiten, Präsentationen und Klassenarbeiten durch die Schüler. Um eine Datei hochzuladen, müssen zunächst Informationen zu Absender und Lehrkraft angegeben werden. Anschließend ist die abzugebende Datei auszuwählen. Die maximal erlaubte Dateigröße beträgt 5MB. Schließlich kann ein zusätzlicher Kommentar hinzugefügt werden.',
     'Nach Betätigung des Upload-Buttons wird die Datei übermittelt und anschließend per Mail an die ausgewählte Lehrkraft versandt. Die Schülerin/der Schüler bekommt ebenfalls eine Benachrichtigungsmail.')
-    button = A('Upload file', _href=URL('default', 'upload'), _class='btn btn-primary')
+    button = A(T('Upload file'), _href=URL('default', 'upload'), _class='btn btn-primary')
     return locals()
 
 
 def upload():
-    form = SQLFORM(db.upload).process()
+    # TODO Storing the original filename (see: http://web2py.com/books/default/chapter/29/07/forms-and-validators#Storing-the-original-filename)
+    form = SQLFORM(db.upload)
     # check if token is correct
-    #if db.task[form.vars.Aufgabe]:
-    #    response.flash = 'Korrekte Aufgabe!'
-    #else:
-    #    response.flash = 'Falsche Aufgabe!'
+    # check if now is between startdate and duedate
+    # check if task and teacher correspond correctly
     # if form correct perform the insert
-    if form.accepted:
-        response.flash = 'Datei wurde hochgeladen!'
+    if form.process().accepted:
+        response.flash = 'File successfully uploaded!'
+        #mail.send(request.vars.EMail, 'File successfully uploaded', 'Your file with the hash (MD5) xxx has been successfully uploaded.')
+    #elif form.errors:
+    #    response.flash = 'Form has errors!'
     return locals()
-    #return dict(form=form)
 
 
 @auth.requires_login()
-def retrieve():
-    uploads = db(db.upload).select()
-    download_button = A('download zipped data', _href=URL('default', 'download_zip_file'), _class='btn btn-primary')
-    return locals
+def collect():
+    # create drop down field with all tasks of current user
+    tasks = db().select(db.task.ALL)
+    task_chooser = FORM(TR("Choose a task:",
+                           SELECT(_name='taskselect', *[OPTION(tasks[i].Name, _value=str(tasks[i].id)) for i in range(len(tasks))])),
+                        TR(INPUT(_name='Select task...', _type='submit')))
+
+    # show chosen task with all its uploads
+    if request.vars.taskselect:
+        uploads = db(db.upload.Task == request.vars.taskselect).select()
+        #uploads = db().select(db.task.id == request.vars.taskselect)
+        download_button = A('Download all Uploads...', _href=URL('default', 'download_task'), _class='btn btn-primary')
+
+    return locals()
 
 
 @auth.requires_login()
-def download_zip_file():
+def download_task():
     pass
 
 
@@ -38,7 +55,18 @@ def user():
 
 
 def manage():
+    # create button to get to the login page
     login = A('login to upload', _href=URL('user/login'), _class='btn btn-primary')
-    grid = SQLFORM.grid(db.task) if auth.user else login
+
+    # define all necessary information for data grid and build it
+    query=((db.task.Teacher == auth.user))
+    fields = (db.task.Name, db.task.Teacher, db.task.DueDate, db.task.Token)
+    headers = {'task.Name':   T('Name'),
+               'task.Teacher': T('Teacher'),
+               'task.DueDate': T('DueDate'),
+               'task.Token': T('Token')}
+    default_sort_order=[db.task.DueDate]
+    grid = SQLFORM.grid(query=query, fields=fields, headers=headers, orderby=default_sort_order, create=True,
+                        deletable=True, editable=True, maxtextlength=64, paginate=25) if auth.user else login
     return locals()
 
