@@ -58,5 +58,9 @@ db.upload.AttendingClass.requires = IS_NOT_EMPTY()
 db.upload.EMail.requires = IS_EMAIL()
 
 # define upload limits
-db.upload.UploadedFile.requires = [IS_LENGTH(5242880, 0),IS_NOT_EMPTY()]
+db.upload.UploadedFile.requires = [IS_LENGTH(5242880, 0), IS_NOT_EMPTY()]
+
+# check whether the task is really from the given teacher
+# (See: https://web2py.wordpress.com/category/web2py-validators/)
+db.upload.Task.requires = IS_IN_DB(db(db.task.Teacher == request.vars.Teacher), 'task.id', '%(Name)s')
 

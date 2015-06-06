@@ -1,7 +1,7 @@
 {{extend 'layout.html'}}
 
 <div style="margin-left: auto; margin-right: auto; width: 60%;">
-    <h2>Uploads verwalten</h2>
+    <h2>{{=T('Download files')}}</h2>
 
     <div>
         {{=task_chooser}}
@@ -19,5 +19,7 @@
     {{if 'download_button' in globals():}}
         <div> {{=download_button}} </div>
     {{pass}}
+
+    {{=script}}
 </div>
 
