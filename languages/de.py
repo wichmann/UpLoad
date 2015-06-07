@@ -184,6 +184,7 @@
 'next %s rows': 'nächste %s Reihen',
 'No databases in this application': 'Keine Datenbank in dieser Anwendung',
 'No records found': 'No records found',
+'No task number given.': 'No task number given.',
 'not in': 'not in',
 'Object or table name': 'Objekt- oder Tabellenname',
 'Online book': 'Online book',

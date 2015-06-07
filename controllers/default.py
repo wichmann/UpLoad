@@ -1,4 +1,10 @@
 
+import zipfile
+import datetime
+import os
+import hashlib
+
+
 DO_MAIL = False
 
 if DO_MAIL:
@@ -24,6 +30,8 @@ def index():
 def upload():
     # TODO Storing the original filename (see: http://web2py.com/books/default/chapter/29/07/forms-and-validators#Storing-the-original-filename)
     form = SQLFORM(db.upload)
+    # search for combo box to choose teacher and append call to JavaScript
+    # function to fill combo box for tasks of the chosen teacher
     teacher_combo = form.element(_name='Teacher')
     script = SCRIPT("""
                     function onchange_teacher() {{
@@ -33,21 +41,26 @@ def upload():
                     }};
                     """.format(task_url=URL('default', 'taskoptions')))
     teacher_combo['_onchange'] = XML('onchange_teacher();')
+
     # TODO check if token is correct
     # TODO check if now is between start date and due date
     # TODO check if OpenForSubmission is True
     # TODO check if task and teacher correspond correctly
-    # if form correct perform the insert
+
+    # perform the insert into database if form is correct
     tasks = SQLTABLE(db(db.task.id > 0)(db.task.Teacher == request.vars.Teacher).select())
     if form.process().accepted:
         response.flash = T('File successfully uploaded!')
+        # create hash for file and store it in database
+        file_on_disk = os.path.join(request.folder, 'uploads', str(form.vars.UploadedFile))
+        hash = hashlib.sha256(open(file_on_disk, 'rb').read()).digest()
         # store original file name in database
         if form.vars.id:
             new_upload_entry = db(db.upload.id == form.vars.id).select().first()
             new_upload_entry.update_record(UploadedFileName=request.vars.UploadedFile.filename)
         if DO_MAIL:
             mail.send(request.vars.EMail, 'File successfully uploaded',
-                      'Your file with the hash (MD5) xxx has been successfully uploaded.')
+                      'Your file with the hash (SHA256) {hash} has been successfully uploaded.'.format(hash=hash))
     return locals()
 
 
@@ -88,6 +101,7 @@ def collect():
         if tasks:
             uploads = db(db.upload.Task == tasks[0].id).select()
             download_button = A(T('Download all uploaded files...'), _href=URL(f='download_task', args=[tasks[0].id]), _class='btn btn-primary')
+    # TODO Use grid = SQLFORM.grid(db.mytable) instead of the homegrown solution!
     return locals()
 
 
@@ -95,14 +109,28 @@ def collect():
 def download_task():
     if request.args:
         task_to_download = request.args[0]
-        #file_list = [x.values() for x in db(db.upload.Task == task_to_download).select(db.upload.UploadedFile)]
-        #response.download(request, db)
-        import os
-        file_on_disk = os.path.join(request.folder, 'uploads', db.upload[task_to_download].UploadedFile)
-        file = open(file_on_disk, 'r')
-        import hashlib
-        hash = hashlib.sha256(open(file_on_disk, 'rb').read()).digest()
-    return locals()
+        current_task_name = db(db.task.id == task_to_download).select(db.task.Name).first().Name
+        FILE_NAME_ENCODING = 'cp437'
+        current_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        archive_file_name = '{}_{}.zip'.format(current_task_name, current_date)
+        archive_file_path = os.path.join(request.folder, 'private', archive_file_name)
+        # TODO Check if old file with same name exists?
+        with zipfile.ZipFile(archive_file_path, 'w') as upload_collection:
+            for row in db(db.upload.Task == task_to_download).select():
+                added_file_path = os.path.join(request.folder, 'uploads', row['UploadedFile'])
+                # TODO Add message if submission was late!
+                directory_in_zip_file_name = '{}, {}'.format(row['LastName'], row['FirstName'])
+                archived_file_path = os.path.join(directory_in_zip_file_name,
+                                                  row['UploadedFileName'].encode(FILE_NAME_ENCODING))
+                upload_collection.write(added_file_path, archived_file_path)
+                # TODO Unzip files into new ZIP file!
+        # put file name of archive into database to be deleted at some point in the future
+        #os.remove(temp_file.name)
+        # transmit file to user
+        r = response.stream(upload_collection.filename, request=request, attachment=True, filename=archive_file_name)
+        return r
+    else:
+        raise HTTP(404, T('No task number given.'))
 
 
 @auth.requires_login()

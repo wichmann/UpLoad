@@ -1,4 +1,7 @@
 
+import datetime
+now=datetime.datetime.now()
+
 # deactive registration of new users
 auth.settings.actions_disabled.append('register')
 
@@ -50,6 +53,7 @@ db.define_table(
     Field('Token', 'string', label=T('Token')),
     Field('UploadedFile', 'upload', label=T('File to be uploaded')),
     Field('UploadedFileName', writable=False, readable=False),
+    Field('SubmissionTime', 'datetime', writable=False, readable=False, default=now),
     auth.signature,
 )
 
