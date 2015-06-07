@@ -1,6 +1,14 @@
 TODO
 ====
 
-* Prevent users from seeing other users tasks
+* Prevent users from seeing other users tasks.
 * Allow export of all uploads for given task as csv, etc.
-* Download of all upload for task as zip file with directory s
+* Check if given token is correct for chosen task.
+* Handle multiple uploads from one student for the same task at the same teacher.
+* Set default applications in routes.py.
+* Add delete hook to delete uploaded files when upload entry is deleted in database.
+* Add global options like maximum upload size, etc.
+* web2py + security best practices
+* Use own CSS or use screen.css in main directory of application?
+* Add column "" to form download page. The value is calculated from stored upload date and end data of the task.
+*

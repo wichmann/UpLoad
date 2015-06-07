@@ -1,25 +1,22 @@
 {{extend 'layout.html'}}
+<link href="{{=URL('static', 'css/screen.css')}}" rel="stylesheet" type="text/css" />
 
 <div style="margin-left: auto; margin-right: auto; width: 60%;">
     <h2>{{=T('Download files')}}</h2>
 
-    <div>
-        {{=task_chooser}}
-    </div>
-
-    {{if 'uploads' in globals():}}
-        <table>
-            <tr><td>Last Name</td><td>First Name</td><td>Attending Class</td></tr>
-        {{for upload in uploads:}}
-            <tr><td>{{=upload.LastName}}</td><td>{{=upload.FirstName}}</td><td>{{=upload.AttendingClass}}</td></tr>
-        {{pass}}
-        </table>
+    {{if 'grid' in globals():}}
+        {{=grid}}
     {{pass}}
 
     {{if 'download_button' in globals():}}
-        <div> {{=download_button}} </div>
+        <div class="right_button"> {{=download_button}} </div>
     {{pass}}
 
-    {{=script}}
+    {{if 'message' in globals():}}
+        <div class="warning_message">
+            {{=message}}
+        </div>
+    {{pass}}
+
 </div>
 

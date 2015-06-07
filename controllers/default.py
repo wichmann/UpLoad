@@ -77,31 +77,41 @@ def taskoptions():
 
 @auth.requires_login()
 def collect():
-    # include java script to submit form when combo box is changed
-    # TODO Write default text like 'Choose a teacher' to combobox
-    script = SCRIPT("""
-                    $('document').ready(function(){
-                        $('select').change(function(){
-                            $('form').submit();
-                        });
-                    });
-                    """)
-    # create drop down field with all tasks of current user
-    tasks = db(db.task.Teacher == auth.user).select()
-    task_combo = SELECT(_name='taskselect', value= request.vars.taskselect if request.vars.taskselect else '',
-                        *[OPTION(tasks[i].Name, _value=str(tasks[i].id)) for i in range(len(tasks))])
-    task_chooser = FORM(TR(T('Choose a task:'), task_combo))
-    # show chosen task with all its uploads
-    if request.vars.taskselect:
-        # if form was send with a chosen task show this task...
-        uploads = db(db.upload.Task == request.vars.taskselect).select()
-        download_button = A(T('Download all uploaded files...'), _href=URL(f='download_task', args=[request.vars.taskselect]), _class='btn btn-primary')
+    # TODO Use arguments instead of GET/POST vars as parameter to determine which uploads to show???
+    # TODO -> Preload value of options in select with URL to upload listing...
+    # TODO -> onclick="ajax('{{=URL('default', 'ajax_test')}}', [], 'target')"
+    # get all task that should be shown in the combo box
+    if auth.has_membership('administrator'):
+        tasks_of_current_user = (db.task.id > 0)
+        message = T('Administrator view: Task of all users are shown!')
     else:
-        # ...else show the first task of current user if there is one
-        if tasks:
-            uploads = db(db.upload.Task == tasks[0].id).select()
-            download_button = A(T('Download all uploaded files...'), _href=URL(f='download_task', args=[tasks[0].id]), _class='btn btn-primary')
-    # TODO Use grid = SQLFORM.grid(db.mytable) instead of the homegrown solution!
+        tasks_of_current_user = (db.task.Teacher == auth.user)
+        message = 'dummy...'
+    # check whether this function was called with arguments
+    if request.args:
+        # show requested task with all its uploads
+        task_to_be_looked_for = request.args[0]
+        query = (db.upload.Task == task_to_be_looked_for)
+        fields = (db.upload.LastName, db.upload.FirstName, db.upload.AttendingClass, db.upload.UploadedFile)
+        headers = {'db.upload.LastName':   T('LastName'),
+                   'db.upload.FirstName': T('FirstName'),
+                   'db.upload.AttendingClass': T('AttendingClass'),
+                   'db.upload.UploadedFile': T('UploadedFile')}
+        default_sort_order=[db.upload.LastName]
+        grid = SQLFORM.grid(query=query, fields=fields, headers=headers, orderby=default_sort_order,
+                            create=False, deletable=False, editable=False, csv=False, maxtextlength=64, paginate=25)
+        download_button = A(T('Download all uploaded files...'), _href=URL(f='download_task', args=[task_to_be_looked_for]),
+                            _class='btn btn-primary')
+    else:
+        # show all tasks of current user because no task was selected by the given argument
+        fields = (db.task.Name, db.task.DueDate)
+        headers = {'task.Name':   T('Name'),
+                   'task.DueDate': T('DueDate')}
+        default_sort_order=[db.task.DueDate]
+        links = [lambda row: A(T('View uploaded files'), _href=URL('default', 'collect', args=[row.id], user_signature=True))]
+        grid = SQLFORM.grid(query=tasks_of_current_user, fields=fields, headers=headers, orderby=default_sort_order,
+                            create=False, deletable=False, editable=False, csv=False, links=links, maxtextlength=64,
+                            paginate=25)
     return locals()
 
 
@@ -120,6 +130,7 @@ def download_task():
                 added_file_path = os.path.join(request.folder, 'uploads', row['UploadedFile'])
                 # TODO Add message if submission was late!
                 directory_in_zip_file_name = '{}, {}'.format(row['LastName'], row['FirstName'])
+                # TODO Make sure row['UploadedFileName'] is not None!
                 archived_file_path = os.path.join(directory_in_zip_file_name,
                                                   row['UploadedFileName'].encode(FILE_NAME_ENCODING))
                 upload_collection.write(added_file_path, archived_file_path)
@@ -150,7 +161,7 @@ def manage():
                'task.DueDate': T('DueDate'),
                'task.Token': T('Token')}
     default_sort_order=[db.task.DueDate]
-    links = [lambda row: A(T('Collect uploaded files'), _href=URL('default', 'collect', args=[row.id]))]
+    links = [lambda row: A(T('Collect uploaded files'), _href=URL('default', 'collect', args=[row.id], user_signature=True))]
     grid = SQLFORM.grid(query=query, fields=fields, headers=headers, orderby=default_sort_order, create=True,
                         links=links, deletable=True, editable=True, csv=False, maxtextlength=64, paginate=25) if auth.user else login
     return locals()
