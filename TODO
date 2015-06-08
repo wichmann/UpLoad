@@ -9,6 +9,5 @@ TODO
 * Add delete hook to delete uploaded files when upload entry is deleted in database.
 * Add global options like maximum upload size, etc.
 * web2py + security best practices
-* Use own CSS or use screen.css in main directory of application?
-* Add column "" to form download page. The value is calculated from stored upload date and end data of the task.
+* Deploy UpLoad via docker.
 *

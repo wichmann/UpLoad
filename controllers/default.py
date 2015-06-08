@@ -6,6 +6,7 @@ import hashlib
 
 
 DO_MAIL = False
+FILE_NAME_ENCODING = 'cp437'
 
 if DO_MAIL:
     from gluon.tools import Mail
@@ -41,15 +42,8 @@ def upload():
                     }};
                     """.format(task_url=URL('default', 'taskoptions')))
     teacher_combo['_onchange'] = XML('onchange_teacher();')
-
-    # TODO check if token is correct
-    # TODO check if now is between start date and due date
-    # TODO check if OpenForSubmission is True
-    # TODO check if task and teacher correspond correctly
-
-    # perform the insert into database if form is correct
-    tasks = SQLTABLE(db(db.task.id > 0)(db.task.Teacher == request.vars.Teacher).select())
-    if form.process().accepted:
+    # validate and process the form
+    if form.process(onvalidate=validate_task_data).accepted:
         response.flash = T('File successfully uploaded!')
         # create hash for file and store it in database
         file_on_disk = os.path.join(request.folder, 'uploads', str(form.vars.UploadedFile))
@@ -62,6 +56,22 @@ def upload():
             mail.send(request.vars.EMail, 'File successfully uploaded',
                       'Your file with the hash (SHA256) {hash} has been successfully uploaded.'.format(hash=hash))
     return locals()
+
+
+def validate_task_data(form):
+    # check following conditions only when task was given in form
+    if request.vars.Task:
+        # check if the task has opened for submissions
+        open_for_submission = db(db.task.id == request.vars.Task).select().first()['OpenForSubmission']
+        if not open_for_submission:
+            form.errors.Task = T('Task is currently not open for submission.')
+        # check if token is correct
+        #token_for_task = db(db.task.id == request.vars.Task).select().first()['Token']
+        #given_token = request.vars.Token
+        #if token_for_task and given_token == token_for_task:
+        #    form.errors.Token = T('Wrong token for given task.')
+        # check if now is after start date
+        # check if task and teacher correspond correctly
 
 
 def taskoptions():
@@ -86,17 +96,17 @@ def collect():
         message = T('Administrator view: Task of all users are shown!')
     else:
         tasks_of_current_user = (db.task.Teacher == auth.user)
-        message = 'dummy...'
     # check whether this function was called with arguments
     if request.args:
         # show requested task with all its uploads
         task_to_be_looked_for = request.args[0]
         query = (db.upload.Task == task_to_be_looked_for)
-        fields = (db.upload.LastName, db.upload.FirstName, db.upload.AttendingClass, db.upload.UploadedFile)
+        fields = (db.upload.LastName, db.upload.FirstName, db.upload.AttendingClass, db.upload.UploadedFile, db.upload.SubmittedOnTime)
         headers = {'db.upload.LastName':   T('LastName'),
                    'db.upload.FirstName': T('FirstName'),
                    'db.upload.AttendingClass': T('AttendingClass'),
-                   'db.upload.UploadedFile': T('UploadedFile')}
+                   'db.upload.UploadedFile': T('UploadedFile'),
+                   'db.upload.SubmittedOnTime': T('SubmittedOnTime')}
         default_sort_order=[db.upload.LastName]
         grid = SQLFORM.grid(query=query, fields=fields, headers=headers, orderby=default_sort_order,
                             create=False, deletable=False, editable=False, csv=False, maxtextlength=64, paginate=25)
@@ -108,7 +118,11 @@ def collect():
         headers = {'task.Name':   T('Name'),
                    'task.DueDate': T('DueDate')}
         default_sort_order=[db.task.DueDate]
-        links = [lambda row: A(T('View uploaded files'), _href=URL('default', 'collect', args=[row.id], user_signature=True))]
+        link_to_view = dict(header=T('View uploads'),
+                      body=lambda row: A(T('View uploaded files'), _href=URL('default', 'collect', args=[row.id], user_signature=True)))
+        link_to_download = dict(header=T('Download files'),
+                      body=lambda row: A(T('Download files'), _href=URL('default', 'download_task', args=[row.id], user_signature=True)))
+        links = [link_to_view, link_to_download]
         grid = SQLFORM.grid(query=tasks_of_current_user, fields=fields, headers=headers, orderby=default_sort_order,
                             create=False, deletable=False, editable=False, csv=False, links=links, maxtextlength=64,
                             paginate=25)
@@ -120,7 +134,6 @@ def download_task():
     if request.args:
         task_to_download = request.args[0]
         current_task_name = db(db.task.id == task_to_download).select(db.task.Name).first().Name
-        FILE_NAME_ENCODING = 'cp437'
         current_date = datetime.datetime.now().strftime('%Y-%m-%d')
         archive_file_name = '{}_{}.zip'.format(current_task_name, current_date)
         archive_file_path = os.path.join(request.folder, 'private', archive_file_name)
@@ -161,7 +174,8 @@ def manage():
                'task.DueDate': T('DueDate'),
                'task.Token': T('Token')}
     default_sort_order=[db.task.DueDate]
-    links = [lambda row: A(T('Collect uploaded files'), _href=URL('default', 'collect', args=[row.id], user_signature=True))]
+    links = [dict(header=T('View uploads'),
+                      body=lambda row: A(T('View uploaded files'), _href=URL('default', 'collect', args=[row.id], user_signature=True)))]
     grid = SQLFORM.grid(query=query, fields=fields, headers=headers, orderby=default_sort_order, create=True,
                         links=links, deletable=True, editable=True, csv=False, maxtextlength=64, paginate=25) if auth.user else login
     return locals()
