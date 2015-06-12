@@ -4,11 +4,11 @@ import datetime
 import os
 import hashlib
 
+# import config for UpLoad application
+config = local_import('config')
 
-DO_MAIL = False
-FILE_NAME_ENCODING = 'cp437'
 
-if DO_MAIL:
+if config.DO_MAIL:
     from gluon.tools import Mail
     mail = Mail()
     mail.settings.server = ''
@@ -53,7 +53,7 @@ def upload():
             new_upload_entry = db(db.upload.id == form.vars.id).select().first()
             new_upload_entry.update_record(UploadedFileName=request.vars.UploadedFile.filename)
             new_upload_entry.update_record(FileHash=hash_of_file)
-        if DO_MAIL:
+        if config.DO_MAIL:
             mail.send(request.vars.EMail, 'File successfully uploaded',
                       'Your file with the hash (SHA256) {hash} has been successfully uploaded.'.format(hash=hash_of_file))
     return locals()
@@ -158,7 +158,7 @@ def download_task():
                 directory_in_zip_file_name = '{}, {}'.format(row['LastName'], row['FirstName'])
                 # TODO Make sure row['UploadedFileName'] is not None!
                 archived_file_path = os.path.join(directory_in_zip_file_name,
-                                                  row['UploadedFileName'].encode(FILE_NAME_ENCODING))
+                                                  row['UploadedFileName'].encode(config.FILE_NAME_ENCODING))
                 upload_collection.write(added_file_path, archived_file_path)
                 # TODO Unzip files into new ZIP file!
         # put file name of archive into database to be deleted at some point in the future

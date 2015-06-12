@@ -1,4 +1,7 @@
 
+# import config for UpLoad application
+config = local_import('config')
+
 import datetime
 now=datetime.datetime.now()
 
@@ -60,7 +63,7 @@ db.upload.AttendingClass.requires = IS_NOT_EMPTY()
 db.upload.EMail.requires = IS_EMAIL()
 
 # define upload limits
-db.upload.UploadedFile.requires = [IS_LENGTH(5242880, 0, error_message=T('File size is to large!')),
+db.upload.UploadedFile.requires = [IS_LENGTH(config.MAX_FILE_LENGTH, 0, error_message=T('File size is to large!')),
                                    IS_NOT_EMPTY(error_message=T('Choose a file to be uploaded!'))]
                                    # IS_UPLOAD_FILENAME(extension='txt')
 

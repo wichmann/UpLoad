@@ -251,7 +251,7 @@
 'state': 'Status',
 'Statistics': 'Statistik',
 'Stylesheet': 'Stylesheet',
-'Submission for given task no yet allowed!': 'Submission for given task no yet allowed!',
+'Submission for given task no yet allowed!': 'Upload für die gegebene Aufgabe ist noch nicht erlaubt!',
 'submit': 'Abschicken',
 'Submit': 'Abschicken',
 'Submittedontime': 'Pünklich abgegeben',
