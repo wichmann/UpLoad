@@ -44,3 +44,11 @@ h2 {
     font-size: 150%;
     text-align: center;
 }
+
+#javascript_warning{
+    padding: 10px;
+    margin: 1em 0 1em 0;
+    color: red;
+    font-size: 150%;
+    text-align: center;
+}

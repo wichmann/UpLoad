@@ -3,11 +3,15 @@ TODO
 
 * Prevent users from seeing other users tasks.
 * Allow export of all uploads for given task as csv, etc.
-* Check if given token is correct for chosen task.
-* Handle multiple uploads from one student for the same task at the same teacher.
 * Set default applications in routes.py.
 * Add delete hook to delete uploaded files when upload entry is deleted in database.
-* Add global options like maximum upload size, etc.
 * web2py + security best practices
 * Deploy UpLoad via docker.
+* Block or handle multiple uploads from a student to the same task.
+* Expand uploaded zip files into generated zip file.
+* Prevent multiple tasks from a teacher with the same name.
+* Allow individual tokens for each uploader.
+   * Create boolean field 'UseMultipleTokens' in upload table.
+   * Create table 'tokens'.
+   * Create page to generate tokens for a given task if field 'UseMultipleTokens' is true.
 *

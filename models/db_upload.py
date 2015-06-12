@@ -23,6 +23,15 @@ if db(db.auth_group.role == 'administrator').isempty():
     auth.add_group('administrator')
 
 
+# create table to store names and dates for all created archives
+db.define_table(
+    'created_archives',
+    Field('FileName', required=True),
+    Field('CreationTime', 'datetime', writable=False, readable=False, default=now),
+    auth.signature,
+)
+
+
 db.define_table(
     'task',
     Field('Name', required=True),
@@ -50,6 +59,7 @@ db.define_table(
     Field('Task', db.task, required=True, label=T('Task')),
     Field('Token', 'string', label=T('Token')),
     Field('FileHash', 'string', writable=False, readable=False, label=T('Hash')),
+    Field('IPAddress', 'string', writable=False, readable=False, label=T('IP Address')),
     Field('UploadedFile', 'upload', label=T('File to be uploaded')), # autodelete=True,
     Field('UploadedFileName', writable=False, readable=False),
     Field('SubmissionTime', 'datetime', writable=False, readable=False, default=now),

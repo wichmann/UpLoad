@@ -14,13 +14,17 @@ if config.DO_MAIL:
     mail.settings.server = ''
     mail.settings.sender = ''
     mail.settings.login = ''
+    #mail.settings.tls = False
 
 
 def index():
-    message = ('UpLoad@BBS dient dem einfachen Abgeben von Projektarbeiten, Präsentationen und Klassenarbeiten durch die Schüler. Um eine Datei hochzuladen, müssen zunächst Informationen zu Absender und Lehrkraft angegeben werden. Anschließend ist die abzugebende Datei auszuwählen. Die maximal erlaubte Dateigröße beträgt 5MB. Schließlich kann ein zusätzlicher Kommentar hinzugefügt werden.',
-    'Nach Betätigung des Upload-Buttons wird die Datei übermittelt und anschließend per Mail an die ausgewählte Lehrkraft versandt. Die Schülerin/der Schüler bekommt ebenfalls eine Benachrichtigungsmail.')
+    message = ('UpLoad@BBS dient dem einfachen Abgeben von Projektarbeiten, Präsentationen und Klassenarbeiten. Um eine Datei hochzuladen, müssen zunächst Informationen zum Absender, der Lehrkraft und der Aufgabe angegeben werden. Anschließend ist die abzugebende Datei auszuwählen. Die maximal erlaubte Dateigröße beträgt 5MB. Schließlich kann ein zusätzlicher Kommentar hinzugefügt werden.',
+    'Nach Betätigung des Upload-Buttons wird die Datei übermittelt und anschließend wird die ausgewählte Lehrkraft per Mail darüber informiert. Der Uploader bekommt ebenfalls eine Benachrichtigungsmail.')
     button = A(T('Upload file'), _href=URL('default', 'upload'), _class='btn btn-primary')
+    remove_warning = SCRIPT('$("#javascript_warning").empty();')
+    javascript_warning = DIV(T('This page only works with JavaScript.'), _id='javascript_warning')
     return locals()
+
 
 #
 # Cascading combobox:
@@ -29,7 +33,6 @@ def index():
 # http://www.web2pyslices.com/slice/show/1467/cascading-drop-down-lists-with-ajax
 #
 def upload():
-    # TODO Storing the original filename (see: http://web2py.com/books/default/chapter/29/07/forms-and-validators#Storing-the-original-filename)
     form = SQLFORM(db.upload)
     # search for combo box to choose teacher and append call to JavaScript
     # function to fill combo box for tasks of the chosen teacher
@@ -53,9 +56,18 @@ def upload():
             new_upload_entry = db(db.upload.id == form.vars.id).select().first()
             new_upload_entry.update_record(UploadedFileName=request.vars.UploadedFile.filename)
             new_upload_entry.update_record(FileHash=hash_of_file)
+            new_upload_entry.update_record(IPAddress=request.client)
         if config.DO_MAIL:
-            mail.send(request.vars.EMail, 'File successfully uploaded',
-                      'Your file with the hash (SHA256) {hash} has been successfully uploaded.'.format(hash=hash_of_file))
+            # sent mail to uploader
+            mail.send(request.vars.EMail, T('File successfully uploaded'),
+                      T('Your file ({filename}) with the hash (SHA256) {hash} has been successfully uploaded.').format(hash=hash_of_file, filename=request.vars.UploadedFile.filename))
+            # send mail to teacher of task
+            task_name = db(db.task.id == request.vars.Task).select().first()['Name']
+            teacher_email = db(db.auth_user.id == request.vars.Teacher).select().first()['email']
+            message_teacher = T('A file ({filename}) was uploaded for task {task} by {firstname} {lastname} with the hash (SHA256) {hash}.')
+            mail.send(teacher_email, T('File uploaded for task {task}').format(task=task_name),
+                      message_teacher.format(hash=hash_of_file, filename=request.vars.UploadedFile.filename,
+                                             task=task_name, firstname=request.vars.FirstName, lastname=request.vars.LastName))
     return locals()
 
 
@@ -150,19 +162,27 @@ def download_task():
         current_date = datetime.datetime.now().strftime('%Y-%m-%d')
         archive_file_name = '{}_{}.zip'.format(current_task_name, current_date)
         archive_file_path = os.path.join(request.folder, 'private', archive_file_name)
-        # TODO Check if old file with same name exists?
+        # delete file if it already exists
+        try:
+            os.remove(archive_file_path)
+        except OSError:
+            pass
         with zipfile.ZipFile(archive_file_path, 'w') as upload_collection:
             for row in db(db.upload.Task == task_to_download).select():
                 added_file_path = os.path.join(request.folder, 'uploads', row['UploadedFile'])
-                # TODO Add message if submission was late!
+                # create directory name and add message if submission was late
                 directory_in_zip_file_name = '{}, {}'.format(row['LastName'], row['FirstName'])
-                # TODO Make sure row['UploadedFileName'] is not None!
-                archived_file_path = os.path.join(directory_in_zip_file_name,
-                                                  row['UploadedFileName'].encode(config.FILE_NAME_ENCODING))
-                upload_collection.write(added_file_path, archived_file_path)
+                if not row['SubmittedOnTime']:
+                    directory_in_zip_file_name += T(' (late)')
+                try:
+                    archived_file_path = os.path.join(directory_in_zip_file_name,
+                                                      row['UploadedFileName'].encode(config.FILE_NAME_ENCODING))
+                    upload_collection.write(added_file_path, archived_file_path)
+                except UnicodeError:
+                    pass
                 # TODO Unzip files into new ZIP file!
         # put file name of archive into database to be deleted at some point in the future
-        #os.remove(temp_file.name)
+        db.created_archives.insert(FileName=archive_file_path)
         # transmit file to user
         r = response.stream(upload_collection.filename, request=request, attachment=True, filename=archive_file_name)
         return r
@@ -191,6 +211,14 @@ def manage():
                       body=lambda row: A(T('View uploaded files'), _href=URL('default', 'collect', args=[row.id], user_signature=True)))]
     grid = SQLFORM.grid(query=query, fields=fields, headers=headers, orderby=default_sort_order, create=True,
                         links=links, deletable=True, editable=True, csv=False, maxtextlength=64, paginate=25) if auth.user else login
+    return locals()
+
+
+def help():
+    help = 'The following pages are available:'
+    list_of_pages = UL(LI('upload'), LI('manage (restricted)'),
+                       LI('download_task/[task_nr] (restricted)'),
+                       LI('view_upload/[hash]'), LI('collect/[task_nr] (restricted)'))
     return locals()
 
 
