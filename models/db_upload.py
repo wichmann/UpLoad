@@ -46,6 +46,7 @@ db.define_table(
     Field('Teacher', db.auth_user, required=True, label=T('Teacher')),
     Field('Task', db.task, required=True, label=T('Task')),
     Field('Token', 'string', label=T('Token')),
+    Field('FileHash', 'string', writable=False, readable=False, label=T('Hash')),
     Field('UploadedFile', 'upload', label=T('File to be uploaded')), # autodelete=True,
     Field('UploadedFileName', writable=False, readable=False),
     Field('SubmissionTime', 'datetime', writable=False, readable=False, default=now),
@@ -59,19 +60,24 @@ db.upload.AttendingClass.requires = IS_NOT_EMPTY()
 db.upload.EMail.requires = IS_EMAIL()
 
 # define upload limits
-db.upload.UploadedFile.requires = [IS_LENGTH(5242880, 0), IS_NOT_EMPTY()] # IS_UPLOAD_FILENAME(extension='txt'),
+db.upload.UploadedFile.requires = [IS_LENGTH(5242880, 0, error_message=T('File size is to large!')),
+                                   IS_NOT_EMPTY(error_message=T('Choose a file to be uploaded!'))]
+                                   # IS_UPLOAD_FILENAME(extension='txt')
 
 # check whether the task is really from the given teacher
 # (See: https://web2py.wordpress.com/category/web2py-validators/)
 db.upload.Task.requires = IS_IN_DB(db(db.task.Teacher == request.vars.Teacher), 'task.id', '%(Name)s', error_message=T('Given task and teacher does not match!'))
+
 # check whether the token is really from the given task
-db.upload.Token.requires = IS_IN_DB(db(db.task.id == request.vars.Task), 'task.Token')
+db.upload.Token.requires = IS_IN_DB(db(db.task.id == request.vars.Task), 'task.Token', error_message=T('Wrong token given!'))
 db.upload.Token.widget = SQLFORM.widgets.string.widget
+
 # check whether the task has started yet
 #if request.vars.Task:
 #    start_date = db(db.task.id == request.vars.Task).select(db.task.StartDate).first()['StartDate']
 #    start_datetime = datetime.datetime.combine(start_date, datetime.datetime.min.time())
 #    db.upload.SubmissionTime.requires = IS_DATETIME_IN_RANGE(minimum=start_datetime, error_message=T('Submission for given task no yet allowed!'))
+
 # check whether the task has opened for submissions
 #if request.vars.Task:
 #    opened = db(db.task.id == request.vars.Task).select(db.task.OpenForSubmission).first()['OpenForSubmission']

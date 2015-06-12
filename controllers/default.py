@@ -43,35 +43,38 @@ def upload():
                     """.format(task_url=URL('default', 'taskoptions')))
     teacher_combo['_onchange'] = XML('onchange_teacher();')
     # validate and process the form
-    if form.process(onvalidate=validate_task_data).accepted:
+    if form.process(onvalidation=validate_task_data).accepted:
         response.flash = T('File successfully uploaded!')
         # create hash for file and store it in database
         file_on_disk = os.path.join(request.folder, 'uploads', str(form.vars.UploadedFile))
-        hash = hashlib.sha256(open(file_on_disk, 'rb').read()).digest()
+        hash_of_file = hashlib.sha256(open(file_on_disk, 'rb').read()).hexdigest()
         # store original file name in database
         if form.vars.id:
             new_upload_entry = db(db.upload.id == form.vars.id).select().first()
             new_upload_entry.update_record(UploadedFileName=request.vars.UploadedFile.filename)
+            new_upload_entry.update_record(FileHash=hash_of_file)
         if DO_MAIL:
             mail.send(request.vars.EMail, 'File successfully uploaded',
-                      'Your file with the hash (SHA256) {hash} has been successfully uploaded.'.format(hash=hash))
+                      'Your file with the hash (SHA256) {hash} has been successfully uploaded.'.format(hash=hash_of_file))
     return locals()
 
 
 def validate_task_data(form):
-    # check following conditions only when task was given in form
-    if request.vars.Task:
-        # check if the task has opened for submissions
-        open_for_submission = db(db.task.id == request.vars.Task).select().first()['OpenForSubmission']
-        if not open_for_submission:
-            form.errors.Task = T('Task is currently not open for submission.')
-        # check if token is correct
-        #token_for_task = db(db.task.id == request.vars.Task).select().first()['Token']
-        #given_token = request.vars.Token
-        #if token_for_task and given_token == token_for_task:
-        #    form.errors.Token = T('Wrong token for given task.')
-        # check if now is after start date
-        # check if task and teacher correspond correctly
+    # check if the task has opened for submissions
+    open_for_submission = db(db.task.id == request.vars.Task).select().first()['OpenForSubmission']
+    if not open_for_submission:
+        form.errors.Task = T('Task is currently not open for submission.')
+    # check if token is correct
+    #token_for_task = db(db.task.id == request.vars.Task).select().first()['Token']
+    #given_token = request.vars.Token
+    #if given_token == token_for_task:
+    #    form.errors.Token = T('Wrong token for given task.')
+    # check if now is after start date
+    start_date = db(db.task.id == request.vars.Task).select(db.task.StartDate).first()['StartDate']
+    start_datetime = datetime.datetime.combine(start_date, datetime.datetime.min.time())
+    if start_datetime > datetime.datetime.now():
+        form.errors.Task = T('Submission for given task no yet allowed!')
+    # check if task and teacher correspond correctly [DONE IN MODEL!]
 
 
 def taskoptions():
@@ -127,6 +130,16 @@ def collect():
                             create=False, deletable=False, editable=False, csv=False, links=links, maxtextlength=64,
                             paginate=25)
     return locals()
+
+
+def view_upload():
+    """Shows information for a specific upload."""
+    if request.args:
+        upload_to_be_looked_for = request.args[0]
+        upload = db(db.upload.FileHash == upload_to_be_looked_for).select().first()
+        return locals()
+    else:
+        raise HTTP(404, T('No hash for upload given.'))
 
 
 @auth.requires_login()
