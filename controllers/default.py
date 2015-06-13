@@ -1,20 +1,12 @@
+# -*- coding: utf-8 -*-
 
 import zipfile
 import datetime
 import os
 import hashlib
 
-# import config for UpLoad application
-config = local_import('config')
 
-
-if config.DO_MAIL:
-    from gluon.tools import Mail
-    mail = Mail()
-    mail.settings.server = ''
-    mail.settings.sender = ''
-    mail.settings.login = ''
-    mail.settings.tls = False
+mail = auth.settings.mailer
 
 
 def index():
@@ -58,7 +50,7 @@ def upload():
             new_upload_entry.update_record(UploadedFileName=request.vars.UploadedFile.filename)
             new_upload_entry.update_record(FileHash=hash_of_file)
             new_upload_entry.update_record(IPAddress=request.client)
-        if config.DO_MAIL:
+        if upload_conf.take('handling.do_mail'):
             # sent mail to uploader
             mail.send(request.vars.EMail, T('File successfully uploaded'),
                       T('Your file ({filename}) with the hash (SHA256) {hash} has been successfully uploaded.').format(hash=hash_of_file, filename=request.vars.UploadedFile.filename))
@@ -180,7 +172,7 @@ def download_task():
                     directory_in_zip_file_name += T(' (late)')
                 try:
                     archived_file_path = os.path.join(directory_in_zip_file_name,
-                                                      row['UploadedFileName'].encode(config.FILE_NAME_ENCODING))
+                                                      row['UploadedFileName'].encode(upload_conf.take('handling.file_name_encoding')))
                     upload_collection.write(added_file_path, archived_file_path)
                 except UnicodeError:
                     pass
@@ -230,6 +222,12 @@ def validate_task_data(form):
         # check if teacher adds task for himself
         if request.vars.Teacher != str(auth.user_id):
             form.errors.Teacher = T('You can only create tasks for yourself.')
+
+
+@auth.requires_membership('administrator')
+def manage_teacher():
+    form = SQLFORM.grid(db.auth_user)
+    return dict(form=form)
 
 
 def help():

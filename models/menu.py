@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 #response.logo = A('UpLoad', _class="navbar-brand",_href=URL('default', 'index'))
 response.logo = A(IMG(_src=URL('static', 'images/logo.png'), _alt='UpLoad'), _class="navbar-brand", _href=URL('default', 'index'))

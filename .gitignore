@@ -56,4 +56,6 @@ target/
 ##### Project specific
 *.log.*
 .idea/*
-
+databases/
+errors/
+sessions/

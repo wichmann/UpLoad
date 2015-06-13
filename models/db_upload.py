@@ -1,26 +1,8 @@
+# -*- coding: utf-8 -*-
 
-# import config for UpLoad application
-config = local_import('config')
-
+# get current date to be used when an upload is stored
 import datetime
 now=datetime.datetime.now()
-
-# deactive registration of new users
-auth.settings.actions_disabled.append('register')
-
-# add field for all users to store whether they want to be informed via email for every update
-auth.settings.extra_fields['auth_user']= [
-    Field('SendMessages', 'boolean', requires=IS_NOT_EMPTY()),
-]
-
-# change appearance of users in all auto generated forms
-db.auth_user._format = '%(last_name)s'
-
-auth.define_tables(username=True)
-
-# create administrator group if not already there
-if db(db.auth_group.role == 'administrator').isempty():
-    auth.add_group('administrator')
 
 
 # create table to store names and dates for all created archives
@@ -75,7 +57,8 @@ db.upload.AttendingClass.requires = IS_NOT_EMPTY()
 db.upload.EMail.requires = IS_EMAIL()
 
 # define upload limits
-db.upload.UploadedFile.requires = [IS_LENGTH(config.MAX_FILE_LENGTH, 0, error_message=T('File size is to large!')),
+max_length = int(upload_conf.take('handling.max_file_length'))
+db.upload.UploadedFile.requires = [IS_LENGTH(max_length, 0, error_message=T('File size is to large!')),
                                    IS_NOT_EMPTY(error_message=T('Choose a file to be uploaded!'))]
                                    # IS_UPLOAD_FILENAME(extension='txt')
 
@@ -86,14 +69,4 @@ db.upload.Task.requires = IS_IN_DB(db(db.task.Teacher == request.vars.Teacher), 
 # check whether the token is really from the given task
 db.upload.Token.requires = IS_IN_DB(db(db.task.id == request.vars.Task), 'task.Token', error_message=T('Wrong token given!'))
 db.upload.Token.widget = SQLFORM.widgets.string.widget
-
-# check whether the task has started yet
-#if request.vars.Task:
-#    start_date = db(db.task.id == request.vars.Task).select(db.task.StartDate).first()['StartDate']
-#    start_datetime = datetime.datetime.combine(start_date, datetime.datetime.min.time())
-#    db.upload.SubmissionTime.requires = IS_DATETIME_IN_RANGE(minimum=start_datetime, error_message=T('Submission for given task no yet allowed!'))
-
-# check whether the task has opened for submissions
-#if request.vars.Task:
-#    opened = db(db.task.id == request.vars.Task).select(db.task.OpenForSubmission).first()['OpenForSubmission']
 
