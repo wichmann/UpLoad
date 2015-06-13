@@ -14,12 +14,12 @@ if config.DO_MAIL:
     mail.settings.server = ''
     mail.settings.sender = ''
     mail.settings.login = ''
-    #mail.settings.tls = False
+    mail.settings.tls = False
 
 
 def index():
-    message = ('UpLoad@BBS dient dem einfachen Abgeben von Projektarbeiten, Präsentationen und Klassenarbeiten. Um eine Datei hochzuladen, müssen zunächst Informationen zum Absender, der Lehrkraft und der Aufgabe angegeben werden. Anschließend ist die abzugebende Datei auszuwählen. Die maximal erlaubte Dateigröße beträgt 5MB. Schließlich kann ein zusätzlicher Kommentar hinzugefügt werden.',
-    'Nach Betätigung des Upload-Buttons wird die Datei übermittelt und anschließend wird die ausgewählte Lehrkraft per Mail darüber informiert. Der Uploader bekommt ebenfalls eine Benachrichtigungsmail.')
+    message = (T('UpLoad@BBS is used to upload presentations, project documentation and tests. To upload a file you have to fill out the form with information about the uploader, the teacher and the task for which you want to upload a file. Then you can choose a file to be uploaded. The maximum file size is 5MiB.'),
+               T('After the file was uploaded, the chosen teacher will be informed by email. The uploader also gets an email with the hash (SHA256) of the uploaded file.'))
     button = A(T('Upload file'), _href=URL('default', 'upload'), _class='btn btn-primary')
     remove_warning = SCRIPT('$("#javascript_warning").empty();')
     javascript_warning = DIV(T('This page only works with JavaScript.'), _id='javascript_warning')
@@ -46,11 +46,12 @@ def upload():
                     """.format(task_url=URL('default', 'taskoptions')))
     teacher_combo['_onchange'] = XML('onchange_teacher();')
     # validate and process the form
-    if form.process(onvalidation=validate_task_data).accepted:
+    if form.process(onvalidation=validate_upload_data).accepted:
         response.flash = T('File successfully uploaded!')
         # create hash for file and store it in database
         file_on_disk = os.path.join(request.folder, 'uploads', str(form.vars.UploadedFile))
         hash_of_file = hashlib.sha256(open(file_on_disk, 'rb').read()).hexdigest()
+        # TODO Check if hash is already in db!
         # store original file name in database
         if form.vars.id:
             new_upload_entry = db(db.upload.id == form.vars.id).select().first()
@@ -71,22 +72,25 @@ def upload():
     return locals()
 
 
-def validate_task_data(form):
+def validate_upload_data(form):
     # check if the task has opened for submissions
     open_for_submission = db(db.task.id == request.vars.Task).select().first()['OpenForSubmission']
     if not open_for_submission:
         form.errors.Task = T('Task is currently not open for submission.')
-    # check if token is correct
-    #token_for_task = db(db.task.id == request.vars.Task).select().first()['Token']
-    #given_token = request.vars.Token
-    #if given_token == token_for_task:
-    #    form.errors.Token = T('Wrong token for given task.')
+    # check if token is correct -> DONE IN MODEL!
     # check if now is after start date
     start_date = db(db.task.id == request.vars.Task).select(db.task.StartDate).first()['StartDate']
     start_datetime = datetime.datetime.combine(start_date, datetime.datetime.min.time())
     if start_datetime > datetime.datetime.now():
         form.errors.Task = T('Submission for given task no yet allowed!')
-    # check if task and teacher correspond correctly [DONE IN MODEL!]
+    # check if task and teacher correspond correctly -> DONE IN MODEL!
+    # check if student has already a file uploaded for given task
+    uploads_from_student = db((db.upload.Task==request.vars.Task) &
+                              (db.upload.FirstName==request.vars.FirstName) &
+                              (db.upload.LastName==request.vars.LastName) &
+                              (db.upload.AttendingClass==request.vars.AttendingClass)).count()
+    if uploads_from_student:
+        form.errors.Task = T('You already uploaded a file for this task!')
 
 
 def taskoptions():
@@ -210,8 +214,22 @@ def manage():
     links = [dict(header=T('View uploads'),
                       body=lambda row: A(T('View uploaded files'), _href=URL('default', 'collect', args=[row.id], user_signature=True)))]
     grid = SQLFORM.grid(query=query, fields=fields, headers=headers, orderby=default_sort_order, create=True,
-                        links=links, deletable=True, editable=True, csv=False, maxtextlength=64, paginate=25) if auth.user else login
+                        links=links, deletable=True, editable=True, csv=False, maxtextlength=64, paginate=25,
+                        onvalidation=validate_task_data) if auth.user else login
     return locals()
+
+
+def validate_task_data(form):
+    # only validate when a new task is created
+    if request.args[0] == 'new':
+        # check if the task name has been used by this teacher before
+        tasks_with_same_name = db((db.task.Name == request.vars.Name) &
+                                  (db.task.Teacher == request.vars.Teacher)).count()
+        if tasks_with_same_name:
+            form.errors.Name = T('You already created a Task with the same name. Please delete the old task or rename this one.')
+        # check if teacher adds task for himself
+        if request.vars.Teacher != str(auth.user_id):
+            form.errors.Teacher = T('You can only create tasks for yourself.')
 
 
 def help():

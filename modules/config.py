@@ -1,6 +1,6 @@
 
 # whether to mail uploader and teacher when file was uploaded
-DO_MAIL = False
+DO_MAIL = True
 
 # encoding to be used for file names in zip files
 FILE_NAME_ENCODING = 'cp437'

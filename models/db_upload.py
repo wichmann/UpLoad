@@ -45,8 +45,10 @@ db.define_table(
     format='%(Name)s'
 )
 
+db.task.Name.requires = IS_NOT_EMPTY()
 # display only last name of user instead of his/her id
 db.task.DueDate.requires = IS_DATE(format=('%d.%m.%Y'))
+db.task.StartDate.requires = IS_DATE(format=('%d.%m.%Y'))
 
 
 db.define_table(
