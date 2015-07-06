@@ -6,6 +6,7 @@ import os
 import hashlib
 
 
+# use mailer from Auth with credentials from appconfig.ini
 mail = auth.settings.mailer
 
 

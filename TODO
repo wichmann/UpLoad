@@ -5,6 +5,7 @@ TODO
 * Allow export of all uploads for given task as csv, etc.
 * Set default applications in routes.py.
 * Add comment field in upload form?
+* Change mail settings to use TLS secured SMTP server.
 * Add delete hook to delete uploaded files when upload entry is deleted in database.
 * Research web2py + security best practices
 * Deploy UpLoad via docker.
