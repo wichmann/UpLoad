@@ -57,8 +57,7 @@ db.upload.AttendingClass.requires = IS_NOT_EMPTY()
 db.upload.EMail.requires = IS_EMAIL()
 
 # define upload limits
-max_length = int(upload_conf.take('handling.max_file_length'))
-db.upload.UploadedFile.requires = [IS_LENGTH(max_length, 0, error_message=T('File size is to large!')),
+db.upload.UploadedFile.requires = [IS_LENGTH(upload_conf.take('handling.max_file_length', cast=int), 0, error_message=T('File size is to large!')),
                                    IS_NOT_EMPTY(error_message=T('Choose a file to be uploaded!'))]
                                    # IS_UPLOAD_FILENAME(extension='txt')
 

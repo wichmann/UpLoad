@@ -276,6 +276,7 @@
 'The Views': 'Die Views',
 'This App': 'Diese App',
 'This email already has an account': 'Zu dieser Email-Adresse gibt es bereits einen Benutzer.',
+'This exact file has been uploaded already by a user.': 'Exakt diese Datei wurde bereits von einem Benutzer hochgeladen.',
 'This page only works with JavaScript.': 'Diese Seite funktioniert nur mit JavaScript.',
 'Time in Cache (h:m:s)': 'Zeit im Cache (h:m:s)',
 'Timestamp': 'Zeitstempel',
