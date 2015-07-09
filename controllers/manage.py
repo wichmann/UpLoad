@@ -34,14 +34,18 @@ def tasks():
     # define all necessary information for data grid and build it
     if auth.has_membership('administrator'):
         query = ((db.task.id > 0))
+        fields = (db.task.Name, db.task.Teacher, db.task.DueDate, db.task.Token)
         message = T('Administrator view: Task of all users are shown!')
+        headers = {'task.Name':   T('Name'),
+                   'task.Teacher': T('Teacher'),
+                   'task.DueDate': T('DueDate'),
+                   'task.Token': T('Token')}
     else:
+        fields = (db.task.Name, db.task.DueDate, db.task.Token)
         query = ((db.task.Teacher == auth.user))
-    fields = (db.task.Name, db.task.Teacher, db.task.DueDate, db.task.Token)
-    headers = {'task.Name':   T('Name'),
-               'task.Teacher': T('Teacher'),
-               'task.DueDate': T('DueDate'),
-               'task.Token': T('Token')}
+        headers = {'task.Name':   T('Name'),
+                   'task.DueDate': T('DueDate'),
+                   'task.Token': T('Token')}
     default_sort_order=[db.task.DueDate]
     links = [dict(header=T('View uploads'),
                       body=lambda row: A(T('View uploaded files'), _href=URL('manage', 'collect', args=[row.id], user_signature=True)))]

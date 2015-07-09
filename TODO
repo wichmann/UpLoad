@@ -1,19 +1,17 @@
 TODO
 ====
 
+* Order task in management view by their date and color them according to whether they are open for submission or not.
+* Add column in uploads grids to show how many uploads already have been submitted.
 * Prevent users from seeing other users tasks.
 * Allow export of all uploads for given task as csv, etc.
-* Set default applications in routes.py.
 * Add comment field in upload form?
-* Change mail settings to use TLS secured SMTP server.
 * Add delete hook to delete uploaded files when upload entry is deleted in database.
 * Research web2py + security best practices
 * Deploy UpLoad via docker.
 * Expand uploaded zip files into generated zip file.
-* Prevent multiple tasks from a teacher with the same name.
 * Allow individual tokens for each uploader.
    * Create boolean field 'UseMultipleTokens' in upload table.
    * Create table 'tokens'.
    * Create page to generate tokens for a given task if field 'UseMultipleTokens' is true.
-* Preselect current user in form to create new tasks.
 * Handle multiple uploads from a student to the same task depending on an option of the task.

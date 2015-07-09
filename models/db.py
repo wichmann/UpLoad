@@ -36,8 +36,7 @@ plugins = PluginManager()
 
 ## configure email
 mail = auth.settings.mailer
-mail.settings.server = upload_conf.take('smtp.server')
-#mail.settings.server = 'logging' if request.is_local else upload_conf.take('smtp.server')
+mail.settings.server = 'logging' if request.is_local else upload_conf.take('smtp.server')
 mail.settings.sender = upload_conf.take('smtp.sender')
 mail.settings.login = upload_conf.take('smtp.login')
 mail.settings.tls = False

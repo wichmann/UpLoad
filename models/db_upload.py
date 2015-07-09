@@ -14,6 +14,7 @@ db.define_table(
 )
 
 
+# create table to store all tasks
 db.define_table(
     'task',
     Field('Name', required=True),
@@ -28,11 +29,12 @@ db.define_table(
 )
 
 db.task.Name.requires = IS_NOT_EMPTY()
-# display only last name of user instead of his/her id
 db.task.DueDate.requires = IS_DATE(format=('%d.%m.%Y'))
 db.task.StartDate.requires = IS_DATE(format=('%d.%m.%Y'))
+db.task.Teacher.default = auth.user_id
 
 
+# create table to store all uploads for every task
 db.define_table(
     'upload',
     Field('LastName', required=True, label=T('Last Name')),
@@ -47,7 +49,8 @@ db.define_table(
     Field('UploadedFile', 'upload', label=T('File to be uploaded')), # autodelete=True,
     Field('UploadedFileName', writable=False, readable=False),
     Field('SubmissionTime', 'datetime', writable=False, readable=False, default=now),
-    Field('SubmittedOnTime', 'boolean', compute=lambda row: db(db.task.id == row['Task']).select(db.task.DueDate).first()['DueDate'] > row['SubmissionTime'].date()),
+    Field('SubmittedOnTime', 'boolean', compute=lambda row: db(db.task.id == row['Task']).select(db.task.DueDate).first()['DueDate'] > row['SubmissionTime'].date(),
+          label=T('SubmittedOnTime')),
     auth.signature,
 )
 
@@ -59,7 +62,6 @@ db.upload.EMail.requires = IS_EMAIL()
 # define upload limits
 db.upload.UploadedFile.requires = [IS_LENGTH(upload_conf.take('handling.max_file_length', cast=int), 0, error_message=T('File size is to large!')),
                                    IS_NOT_EMPTY(error_message=T('Choose a file to be uploaded!'))]
-                                   # IS_UPLOAD_FILENAME(extension='txt')
 
 # check whether the task is really from the given teacher
 # (See: https://web2py.wordpress.com/category/web2py-validators/)
