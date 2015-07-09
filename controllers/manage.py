@@ -18,7 +18,7 @@ mail = auth.settings.mailer
 
 
 @auth.requires_login()
-def manage():
+def tasks():
     """Manages tasks to upload files to. New tasks can be created and existing
        task can be changed or deleted. Every logged in user can only see and
        change her own tasks. Only the users in the administrator group can see
@@ -70,7 +70,7 @@ def validate_task_data(form):
 
 
 @auth.requires_membership('administrator')
-def manage_teacher():
+def teachers():
     form = SQLFORM.grid(db.auth_user)
     return dict(form=form)
 
@@ -79,6 +79,7 @@ def manage_teacher():
 def download_task():
     if request.args:
         task_to_download = request.args[0]
+        # TODO Check if at least one task was uploaded, else return a message?!
         current_task_name = db(db.task.id == task_to_download).select(db.task.Name).first().Name
         current_date = datetime.datetime.now().strftime('%Y-%m-%d')
         archive_file_name = '{}_{}.zip'.format(current_task_name, current_date)
@@ -167,7 +168,8 @@ def collect():
 @auth.requires_login()
 def help():
     help = 'The following pages are available:'
-    list_of_pages = UL(LI('upload/upload'), LI('manage/manage (restricted)'),
+    list_of_pages = UL(LI('upload/upload'), LI('manage/tasks (restricted)'),
                        LI('manage/download_task/[task_nr] (restricted)'),
-                       LI('upload/view_upload/[hash]'), LI('manage/collect/[task_nr] (restricted)'))
+                       LI('upload/view/[hash]'), LI('manage/collect/[task_nr] (restricted)'),
+                       LI('manage/teachers'))
     return locals()

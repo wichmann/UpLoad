@@ -118,6 +118,8 @@ def validate_upload_data(form):
 def validate_uploaded_file_hash(form):
     # create hash for raw bytes stored in request
     hash_of_file = hashlib.sha256(request.vars.UploadedFile.file.read()).hexdigest()
+    # return the read cursor to the start of the file because otherwise no content were written to file on disk
+    request.vars.UploadedFile.file.seek(0)
     # store hash that was calculated in form object so that it has not to be caculated again
     form.hash_of_file = hash_of_file
     # check if hash is already in database
@@ -156,7 +158,7 @@ def taskoptions():
     return "$('#upload_Task').append('%s')" % options
 
 
-def view_upload():
+def view():
     """
     Shows information for a specific upload identified by its hash value. If
     multiple uploads have the same hash, only the first one is displayed in

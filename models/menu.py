@@ -7,4 +7,4 @@ response.menu = []
 response.menu.append((T('Upload file'), False, URL('upload', 'upload')))
 if auth.is_logged_in():
     response.menu.append((T('Download files'), False, URL('manage', 'collect')))
-    response.menu.append((T('Manage tasks'), False, URL('manage', 'manage')))
+    response.menu.append((T('Manage tasks'), False, URL('manage', 'tasks')))
