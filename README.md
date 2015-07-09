@@ -22,16 +22,18 @@ Deployment
 
 3) Change database and mail configuration in UpLoad/private/appconfig.ini.
 
-4) Copy routes.root.py from repository to main web2py directory. 
+4) Copy routes.root.py from repository to main web2py (routes.py) directory.
 
-5) Go to http://[server address]/Upload and log in as null@null.com with the
+5) Go to http://[server address]/admin and reload routes.
+
+6) Go to http://[server address]/Upload and log in as null@null.com with the
    admin password "1234".
 
-6) Change the name and email address of the administrator account.
+7) Change the name, password and email address of the administrator account.
 
-7) Create new accounts for teachers under /UpLoad/default/manage_teacher.
+8) Create new accounts for teachers under /UpLoad/manage/teacher.
 
-8) Create new task to upload files to under /UpLoad/default/manage.
+9) Create new task to upload files to under /UpLoad/manage/tasks.
 
 [1] https://github.com/wichmann/UpLoad.git
 
