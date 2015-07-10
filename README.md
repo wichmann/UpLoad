@@ -51,7 +51,7 @@ Translations were provided by:
 
 Requirements
 ------------
-UpLoad requires Python ???
+UpLoad runs with web2py 2.11.2 under Python 2.7.9. 
 
 
 Problems
@@ -70,5 +70,5 @@ programs, so give the developers lots of thanks sometime!
   contained, serverless, zero-configuration, transactional SQL database engine.
   SQLite is in the public domain. No claim of ownership is made to any part of
   the code.
-*
-*
+* Some cliparts from opencliparts.org:
+   - https://openclipart.org/detail/212049/rodentiaiconsemblemuploads
