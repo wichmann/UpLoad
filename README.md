@@ -18,7 +18,7 @@ Deployment
 ----------
 1) Create an web2py directory to be used by your web server.
 
-2) Clone UpLoad repository from Github [1] to web2py/applications/.
+2) Clone UpLoad repository from [Github](https://github.com/wichmann/UpLoad.git) to web2py/applications/.
 
 3) Change database and mail configuration in UpLoad/private/appconfig.ini.
 
@@ -34,8 +34,6 @@ Deployment
 8) Create new accounts for teachers under /UpLoad/manage/teacher.
 
 9) Create new task to upload files to under /UpLoad/manage/tasks.
-
-[1] https://github.com/wichmann/UpLoad.git
 
 
 License
