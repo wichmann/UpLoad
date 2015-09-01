@@ -13,3 +13,9 @@ routers = dict(
         #             'view_upload', 'download_task', 'user', 'help'],
         )
 )
+
+# set path to favicon files
+routes_in=(
+  ('.*:/favicon.ico','/upload/static/images/favicon.ico'),
+  ('.*:/robots.txt','/upload/static/robots.txt'),
+)

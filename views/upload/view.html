@@ -1,12 +1,12 @@
 {{extend 'layout.html'}}
-<link href="{{=URL('static', 'css/screen.css')}}" rel="stylesheet" type="text/css" />
 
-<div style="margin-left: auto; margin-right: auto; width: 60%;">
+<div class="container">
+  <div class="col-md-8 col-md-offset-2">
     <h2>{{=T('View uploaded file')}}</h2>
     <div style="margin:75px; padding:20px;">
         <p>Hash: {{=upload_to_be_looked_for}}</p>
 
         {{=BEAUTIFY(upload)}}
     </div>
-
+  </div>
 </div>

@@ -42,6 +42,10 @@ def upload():
      * http://www.web2pyslices.com/slice/show/1724/cascading-dropdowns-simplified
      * http://dev.s-cubism.com/plugin_lazy_options_widget
      * http://www.web2pyslices.com/slice/show/1467/cascading-drop-down-lists-with-ajax
+    
+    Todo:
+     * Change to use HTML5-Upload with JQuery and stream file to server.
+       (See http://www.web2pyslices.com/slice/show/1576/html5-file-uploads-with-jquery)
     """
     form = SQLFORM(db.upload)
     # search for combo box to choose teacher and append call to JavaScript

@@ -10,6 +10,7 @@ TODO
 * Research web2py + security best practices
 * Deploy UpLoad via docker.
 * Expand uploaded zip files into generated zip file.
+* Add recommendation for token, like Github does for repository names (e.g. yummy-octo-garbanzo).
 * Allow individual tokens for each uploader.
    * Create boolean field 'UseMultipleTokens' in upload table.
    * Create table 'tokens'.
