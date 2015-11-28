@@ -10,11 +10,15 @@ import zipfile
 import datetime
 import os
 import hashlib
+import logging
+
+from collections import defaultdict
 
 
 # use mailer from Auth with credentials from appconfig.ini
 mail = auth.settings.mailer
 
+logger = logging.getLogger("web2py.app.upload")
 
 
 @auth.requires_login()
@@ -95,18 +99,26 @@ def download_task():
             pass
         # build a zip file with all uploaded files for the task
         with zipfile.ZipFile(archive_file_path, 'w') as upload_collection:
-            for row in db(db.upload.Task == task_to_download).select():
+            list_of_files_till_now = defaultdict(int)
+            for row in db(db.upload.Task == task_to_download).select(orderby=~db.upload.SubmissionTime):
                 added_file_path = os.path.join(request.folder, 'uploads', row['UploadedFile'])
                 # create directory name and add message if submission was late
                 directory_in_zip_file_name = '{}, {}'.format(row['LastName'], row['FirstName'])
                 if not row['SubmittedOnTime']:
                     directory_in_zip_file_name += T(' (late)')
                 try:
-                    archived_file_path = os.path.join(directory_in_zip_file_name,
-                                                      row['UploadedFileName'].encode(upload_conf.take('handling.file_name_encoding')))
+                    archived_file_path = os.path.join(directory_in_zip_file_name, row['UploadedFileName'])
+                    # FIXME Handle file name encoding inside ZIP archive currectly
+                    #       -> .encode(upload_conf.take('handling.file_name_encoding')))
+                    # check if this file name is already in archive (due to multiple
+                    # uploads with same file name)
+                    if archived_file_path in list_of_files_till_now:
+                        archived_file_path += '_{}'.format(list_of_files_till_now[archived_file_path])
                     upload_collection.write(added_file_path, archived_file_path)
+                    # store file name in dict to check for multiple uploads with the same file name
+                    list_of_files_till_now[archived_file_path] += 1
                 except UnicodeError:
-                    pass
+                    logger.error('Encoding failure while creating ZIP file!')
                 # TODO Unzip files into new ZIP file!
         # put file name of archive into database to be deleted at some point in the future
         db.created_archives.insert(FileName=archive_file_path)
