@@ -2,7 +2,7 @@
 
 # get current date to be used when an upload is stored
 import datetime
-now=datetime.datetime.now()
+now = datetime.datetime.now()
 
 
 # create table to store names and dates for all created archives
@@ -22,7 +22,7 @@ db.define_table(
     Field('StartDate', 'date', required=True, label=T('StartDate')),
     Field('DueDate', 'date', required=True, label=T('DueDate')),
     Field('OpenForSubmission','boolean', label=T('OpenForSubmission')),
-    #Field('MultipleUploadsAllowed','boolean', label=T('MultipleUploadsAllowed')),
+    #Field('MultipleUploadsAllowed','boolean', required=True, default=False, label=T('MultipleUploadsAllowed')),
     Field('Token', 'string'),
     auth.signature,
     format='%(Name)s'
@@ -49,7 +49,7 @@ db.define_table(
     Field('UploadedFile', 'upload', label=T('File to be uploaded')), # autodelete=True,
     Field('UploadedFileName', writable=False, readable=False),
     Field('SubmissionTime', 'datetime', writable=False, readable=False, default=now),
-    Field('SubmittedOnTime', 'boolean', compute=lambda row: db(db.task.id == row['Task']).select(db.task.DueDate).first()['DueDate'] > row['SubmissionTime'].date(),
+    Field('SubmittedOnTime', 'boolean', compute=lambda row: db(db.task.id == row['Task']).select(db.task.DueDate).first()['DueDate'] >= row['SubmissionTime'].date(),
           label=T('SubmittedOnTime')),
     auth.signature,
 )
@@ -70,4 +70,3 @@ db.upload.Task.requires = IS_IN_DB(db(db.task.Teacher == request.vars.Teacher), 
 # check whether the token is really from the given task
 db.upload.Token.requires = IS_IN_DB(db(db.task.id == request.vars.Task), 'task.Token', error_message=T('Wrong token given!'))
 db.upload.Token.widget = SQLFORM.widgets.string.widget
-
