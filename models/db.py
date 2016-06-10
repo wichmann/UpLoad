@@ -50,7 +50,7 @@ auth.settings.actions_disabled.append('register')
 
 ## set captchas to be used for registration
 auth.settings.captcha = Recaptcha(request, upload_conf.take('captchas.public', cast=str),
-                                  upload_conf.take('captchas.private', cast=str))
+                                  upload_conf.take('captchas.private', cast=str), use_ssl=True)
 auth.settings.login_captcha = False
 
 ## after defining tables, uncomment below to enable auditing
