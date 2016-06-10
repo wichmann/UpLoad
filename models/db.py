@@ -28,7 +28,7 @@ response.form_label_separator = upload_conf.take('forms.separator')
 #response.optimize_js = 'concat,minify,inline'
 
 
-from gluon.tools import Auth, Service, PluginManager
+from gluon.tools import Auth, Service, PluginManager, Recaptcha
 
 auth = Auth(db)
 service = Service()
@@ -47,6 +47,11 @@ mail.settings.tls = False
 #auth.settings.reset_password_requires_verification = True
 # deactive registration of new users
 auth.settings.actions_disabled.append('register')
+
+## set captchas to be used for registration
+auth.settings.captcha = Recaptcha(request, upload_conf.take('captchas.public', cast=str),
+                                  upload_conf.take('captchas.private', cast=str))
+auth.settings.login_captcha = False
 
 ## after defining tables, uncomment below to enable auditing
 # auth.enable_record_versioning(db)
