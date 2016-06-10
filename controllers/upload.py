@@ -109,12 +109,14 @@ def validate_upload_data(form):
     if start_datetime > datetime.datetime.now():
         form.errors.Task = T('Submission for given task no yet allowed!')
     # check if student has already a file uploaded for given task
-    uploads_from_student = db((db.upload.Task==request.vars.Task) &
-                              (db.upload.FirstName==request.vars.FirstName) &
-                              (db.upload.LastName==request.vars.LastName) &
-                              (db.upload.AttendingClass==request.vars.AttendingClass)).count()
-    if uploads_from_student:
-        form.errors.Task = T('You already uploaded a file for this task!')
+    if not upload_conf.take('handling.allow_multiple_uploads'):
+        # TODO Use database field "MultipleUploadsAllowed" to check whether to allow multiple uploads.
+        uploads_from_student = db((db.upload.Task==request.vars.Task) &
+                                  (db.upload.FirstName==request.vars.FirstName) &
+                                  (db.upload.LastName==request.vars.LastName) &
+                                  (db.upload.AttendingClass==request.vars.AttendingClass)).count()
+        if uploads_from_student:
+            form.errors.Task = T('You already uploaded a file for this task!')
     # check if this exact file was uploaded before
     validate_uploaded_file_hash(form)
 
@@ -155,7 +157,8 @@ def taskoptions():
     :return: snippet to fill task combo box with valid entries
     """
     session.forget(response)
-    tasks = db(db.task.Teacher == request.vars.Teacher).select(db.task.Name, db.task.id)
+    # find all tasks for the given teacher that are currently open for submission
+    tasks = db((db.task.Teacher == request.vars.Teacher) & (db.task.OpenForSubmission == True)).select(db.task.Name, db.task.id)
     options = '<option value=""></option>'
     #options += [OPTION(t.Name, _value=str(t.id)) for t in tasks]
     options += ''.join(['<option value="{id}">{text}</option>'.format(text=t.Name, id=t.id) for t in tasks])

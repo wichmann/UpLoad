@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Provides a default controller for application-level functions, like user profile and login.
+Provides a default controller for application-level functions, like user profile
+and login.
 
 Author: Christian Wichmann
 """

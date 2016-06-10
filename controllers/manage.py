@@ -23,15 +23,16 @@ logger = logging.getLogger("web2py.app.upload")
 
 @auth.requires_login()
 def tasks():
-    """Manages tasks to upload files to. New tasks can be created and existing
-       task can be changed or deleted. Every logged in user can only see and
-       change her own tasks. Only the users in the administrator group can see
-       all tasks.
+    """
+    Manages tasks to upload files to. New tasks can be created and existing
+    task can be changed or deleted. Every logged in user can only see and
+    change her own tasks. Only the users in the administrator group can see
+    all tasks.
 
-       When deleting a task all uploads will also be deleted! The uploaded files
-       may still be in the /UpLoad/uploads/ directory, but all information about
-       who uploaded them and when are lost.
-       """
+    When deleting a task all uploads will also be deleted! The uploaded files
+    may still be in the /UpLoad/uploads/ directory, but all information about
+    who uploaded them and when are lost.
+    """
     # create button to get to the login page
     login = A(T('Login to UpLoad'), _href=URL('user/login'), _class='btn btn-primary')
 
@@ -52,7 +53,8 @@ def tasks():
                    'task.Token': T('Token')}
     default_sort_order=[db.task.DueDate]
     links = [dict(header=T('View uploads'),
-                      body=lambda row: A(T('View uploaded files'), _href=URL('manage', 'collect', args=[row.id], user_signature=True)))]
+                      body=lambda row: A(T('View uploaded files'),
+                                         _href=URL('manage', 'collect', args=[row.id], user_signature=True)))]
     grid = SQLFORM.grid(query=query, fields=fields, headers=headers, orderby=default_sort_order, create=True,
                         links=links, deletable=True, editable=True, csv=False, maxtextlength=64, paginate=25,
                         onvalidation=validate_task_data) if auth.user else login
@@ -60,11 +62,13 @@ def tasks():
 
 
 def validate_task_data(form):
-    """Validates the given data of a form. This function checks whether a task
-       with the given name has been created already. If the form data is not
-       valid, an error message is stored in the form object.
+    """
+    Validates the given data of a form. This function checks whether a task
+    with the given name has been created already. If the form data is not
+    valid, an error message is stored in the form object.
 
-       :param form: form to be checked"""
+    :param form: form to be checked
+    """
     # only validate when a new task is created
     if request.args[0] == 'new':
         # check if the task name has been used by this teacher before
@@ -153,16 +157,19 @@ def collect():
         # show requested task with all its uploads
         task_to_be_looked_for = request.args[0]
         query = (db.upload.Task == task_to_be_looked_for)
-        fields = (db.upload.LastName, db.upload.FirstName, db.upload.AttendingClass, db.upload.UploadedFile, db.upload.SubmittedOnTime)
+        fields = (db.upload.LastName, db.upload.FirstName, db.upload.AttendingClass,
+                  db.upload.UploadedFile, db.upload.SubmittedOnTime)
         headers = {'db.upload.LastName':   T('LastName'),
                    'db.upload.FirstName': T('FirstName'),
                    'db.upload.AttendingClass': T('AttendingClass'),
                    'db.upload.UploadedFile': T('UploadedFile'),
                    'db.upload.SubmittedOnTime': T('SubmittedOnTime')}
         default_sort_order=[db.upload.LastName]
-        grid = SQLFORM.grid(query=query, fields=fields, headers=headers, orderby=default_sort_order,
-                            create=False, deletable=False, editable=False, csv=False, maxtextlength=64, paginate=25)
-        download_button = A(T('Download all uploaded files...'), _href=URL(f='download_task', args=[task_to_be_looked_for]),
+        grid = SQLFORM.grid(query=query, fields=fields, headers=headers,
+                            orderby=default_sort_order, create=False, deletable=False,
+                            editable=False, csv=False, maxtextlength=64, paginate=25)
+        download_button = A(T('Download all uploaded files...'),
+                            _href=URL(f='download_task', args=[task_to_be_looked_for]),
                             _class='btn btn-primary')
     else:
         # show all tasks of current user because no task was selected by the given argument
